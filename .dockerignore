@@ -1,0 +1,13 @@
+.venv
+__pycache__
+**/__pycache__
+*.pyc
+.git
+.gitignore
+.python-version
+mlruns
+mlflow.db
+data
+.env
+README.md
+src/agent_eval.py

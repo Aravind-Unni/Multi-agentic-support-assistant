@@ -1,0 +1,558 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0b0d12;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Cursor-following glow. JS updates --x/--y on mousemove; this radial
+   gradient just tracks those coordinates. Sits behind everything else. */
+.glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    600px circle at var(--x, 50%) var(--y, 50%),
+    rgba(99, 102, 241, 0.18),
+    rgba(99, 102, 241, 0.06) 35%,
+    transparent 65%
+  );
+  transition: background 0.05s ease-out;
+}
+
+.chat-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 640px;
+  height: 90vh;
+  background: #14161c;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0b0d12;
+  color: white;
+}
+
+.chat-header h1 {
+  font-size: 18px;
+  margin: 0;
+  flex: 1;
+}
+
+.chat-header-icon {
+  font-size: 20px;
+}
+
+#newChatBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+#newChatBtn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* === Header avatar badge ===
+   Adapted from the Uiverse.io hover card by Daniel1227k.
+   Scaled from the original 190x254 profile card down to a 44x44
+   header badge; the flip-up social-links content was dropped since
+   there's no profile info to show in a header, but the signature
+   dual-gradient glow border and hover pulse are kept.
+   Markup to use in place of the old <span class="chat-header-icon">:
+
+   <div class="header-avatar">
+     <b></b>
+     <span class="header-avatar-emoji">🛍️</span>
+   </div>
+*/
+.header-avatar {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-avatar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(315deg, #03a9f4, #ff0058);
+}
+
+.header-avatar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(315deg, #03a9f4, #ff0058);
+  filter: blur(10px);
+  opacity: 0.65;
+  transition: opacity 0.4s;
+}
+
+.header-avatar b {
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  background: rgba(11, 13, 18, 0.88);
+  z-index: 2;
+}
+
+.header-avatar-emoji {
+  position: relative;
+  z-index: 3;
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.4s;
+}
+
+.header-avatar:hover::after {
+  opacity: 1;
+}
+
+.header-avatar:hover .header-avatar-emoji {
+  transform: scale(1.15);
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message {
+  max-width: 78%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  line-height: 1.45;
+  font-size: 14.5px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message.user {
+  align-self: flex-end;
+  background: #4f46e5;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  background: #1e2129;
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom-left-radius: 4px;
+}
+
+.message.assistant p {
+  margin: 0 0 8px;
+}
+
+.message.assistant p:last-child {
+  margin-bottom: 0;
+}
+
+.message.assistant ul,
+.message.assistant ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.message.assistant strong {
+  font-weight: 600;
+  color: #fff;
+}
+
+.message.error {
+  align-self: center;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  font-size: 13px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.typing-indicator {
+  display: flex;
+  justify-content: center;
+  padding: 4px 20px 10px;
+}
+
+.typing-indicator.hidden {
+  display: none;
+}
+
+.pl {
+  animation: pl-rotate 2s linear infinite;
+}
+
+.pl__ring {
+  animation: pl-ring-a 2s linear infinite;
+}
+
+.pl__ring--a {
+  stroke: #6366f1;
+}
+
+.pl__ring--b {
+  animation-name: pl-ring-b;
+  stroke: #818cf8;
+}
+
+.pl__ring--c {
+  animation-name: pl-ring-c;
+  stroke: #a5b4fc;
+}
+
+.pl__ring--d {
+  animation-name: pl-ring-d;
+  stroke: #4f46e5;
+}
+
+@keyframes pl-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pl-ring-a {
+  from {
+    stroke-dasharray: 0 660;
+    stroke-width: 20;
+  }
+  47.5% {
+    stroke-dasharray: 660 660;
+    stroke-width: 20;
+  }
+  50% {
+    stroke-dasharray: 660 660;
+    stroke-width: 0;
+  }
+  50.001%,
+  100% {
+    stroke-dasharray: 0 660;
+    stroke-width: 0;
+  }
+}
+
+@keyframes pl-ring-b {
+  from {
+    stroke-dasharray: 0 220;
+    stroke-width: 20;
+  }
+  47.5% {
+    stroke-dasharray: 220 220;
+    stroke-width: 20;
+  }
+  50% {
+    stroke-dasharray: 220 220;
+    stroke-width: 0;
+  }
+  50.001%,
+  100% {
+    stroke-dasharray: 0 220;
+    stroke-width: 0;
+  }
+}
+
+@keyframes pl-ring-c {
+  from {
+    stroke-dasharray: 0 440;
+    stroke-width: 20;
+  }
+  47.5% {
+    stroke-dasharray: 440 440;
+    stroke-width: 20;
+  }
+  50% {
+    stroke-dasharray: 440 440;
+    stroke-width: 0;
+  }
+  50.001%,
+  100% {
+    stroke-dasharray: 0 440;
+    stroke-width: 0;
+  }
+}
+
+@keyframes pl-ring-d {
+  from {
+    stroke-dasharray: 0 440;
+    stroke-width: 20;
+  }
+  47.5% {
+    stroke-dasharray: 440 440;
+    stroke-width: 20;
+  }
+  50% {
+    stroke-dasharray: 440 440;
+    stroke-width: 0;
+  }
+  50.001%,
+  100% {
+    stroke-dasharray: 0 440;
+    stroke-width: 0;
+  }
+}
+
+.quick-chips {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.quick-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e2129;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chip:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: #232734;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+}
+
+.chip-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+#chatForm {
+  display: flex;
+  justify-content: center;
+  padding: 10px 20px 20px;
+}
+
+/* === Landing / hero screen === */
+.landing {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 640px;
+  padding: 48px 32px;
+  text-align: center;
+}
+
+.landing-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.landing-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.landing-avatar .header-avatar-emoji {
+  font-size: 26px;
+}
+
+.landing-title {
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #f4f4f6;
+  margin: 0 0 16px;
+}
+
+.landing-highlight {
+  display: block;
+  background: linear-gradient(90deg, #cf30aa, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-sub {
+  color: #9ca3af;
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 460px;
+  margin: 0 0 32px;
+}
+
+.landing-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, #6366f1, #cf30aa);
+  color: white;
+  border: none;
+  padding: 14px 26px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0 25px rgba(207, 48, 170, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 32px rgba(207, 48, 170, 0.5);
+}
+
+.landing-cta-arrow {
+  transition: transform 0.2s ease;
+}
+
+.landing-cta:hover .landing-cta-arrow {
+  transform: translateX(3px);
+}
+
+.landing-or {
+  margin: 32px 0 14px;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.landing-quick-cards {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.landing-card {
+  flex: 1 1 160px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #14161c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.landing-card:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: #1a1d26;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.2);
+  transform: translateY(-1px);
+}
+
+.landing-card-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  font-size: 15px;
+}
+
+.icon-track {
+  background: rgba(236, 72, 153, 0.15);
+}
+
+.icon-return {
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.icon-refund {
+  background: rgba(250, 204, 21, 0.15);
+}
+
+/* === Fade transition between landing and chat === */
+.hidden {
+  display: none !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+
+.fade-in {
+  animation: fadeInUp 0.45s ease forwards;
+}
+
+.fade-out {
+  animation: fadeOutDown 0.35s ease forwards;
+}

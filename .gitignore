@@ -1,0 +1,38 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# --- Virtual environment ---
+.venv/
+venv/
+env/
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Vector DB / generated data ---
+# Built by RAG_setup.py — regenerate locally/in deployment rather than
+# committing (often large, and can contain embeddings tied to a
+# specific model/version).
+data/
+
+# --- MLflow / eval artifacts ---
+mlruns/
+mlflow.db
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Logs ---
+*.log
+
+# Note: uv.lock is intentionally NOT ignored — keep it committed so
+# builds (including Docker) stay reproducible across machines.
