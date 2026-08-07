@@ -14,7 +14,7 @@ depth.
   policy document, retrieved with a FAISS vector store rather than
   hallucinated.
 - **Human escalation** — the agent recognizes when a query needs a live
-  agent and hands off instead of guessing.
+  agent and hands off instead of guessing and send the details through email API.
 - **Multi-turn memory via LangGraph checkpointing** — conversations are
   tracked per session using LangGraph's `MemorySaver` checkpointer, keyed by
   `thread_id` (mapped 1:1 to the API's `session_id`). This means the agent
@@ -89,6 +89,7 @@ Multi_agent/
 - Python 3.12
 - [uv](https://docs.astral.sh/uv/) for dependency management
 - A Groq API key ([console.groq.com](https://console.groq.com))
+- Sendgrid API key
 
 ### Setup
 
