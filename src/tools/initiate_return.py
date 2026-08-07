@@ -6,7 +6,7 @@ from langchain.tools import tool
 def initiate_return(order_id: str, sku: str, reason: str, email: str) -> str:
     """Initiate and process a return for an item. 
     Requires order_id, sku, customer email, and reason for return.
-    Only call this AFTER confirming eligibility with 'check_return_eligibility'.
+    Only call this AFTER confirming eligibility with 'check_return'.
     Returns a unique return confirmation ID and pickup details."""
 
     # Generate a lightweight tracking reference
