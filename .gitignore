@@ -15,11 +15,10 @@ env/
 .env.*
 !.env.example
 
-# --- Vector DB / generated data ---
-# Built by RAG_setup.py — regenerate locally/in deployment rather than
-# committing (often large, and can contain embeddings tied to a
-# specific model/version).
-data/
+# Note: data/ is intentionally tracked (not ignored). orders.json and
+# trendly_policy.md are static source input the app needs to run, not
+# generated build artifacts — RAG_setup.py builds the vector index in
+# memory at every startup rather than persisting it to disk.
 
 # --- MLflow / eval artifacts ---
 mlruns/

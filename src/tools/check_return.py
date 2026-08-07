@@ -8,7 +8,7 @@ from langgraph.prebuilt import InjectedState
 
 from src.Agent.state import AgentState
 
-DATA_PATH = Path(r"C:\Multi_agent\data\orders.json")
+DATA_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "orders.json"
 
 with open(DATA_PATH, "r", encoding="utf-8") as f:
     _raw = json.load(f)

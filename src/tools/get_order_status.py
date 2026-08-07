@@ -6,7 +6,7 @@ from langchain.tools import tool
 from langchain_core.tools import InjectedToolCallId
 from langgraph.types import Command
 
-DATA_PATH = Path(r"C:\Multi_agent\data\orders.json")
+DATA_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "orders.json"
 
 with open(DATA_PATH, "r", encoding="utf-8") as f:
     _raw = json.load(f)
